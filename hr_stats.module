@@ -1,0 +1,226 @@
+<?php
+
+/**
+* Implements hook_permission().
+*/
+
+function hr_stats_permission(){
+  return array(
+    'access piwik reports' => array(
+      'title' => t('Access piwik reports'),
+      'description' => t('Allow access to Piwik reports.'),
+    ),
+    'administer piwik reports' => array(
+      'title' => t('Administer Piwik reports'),
+      'description' => t('Perfom basic configuration tasks for Piwik reports')
+    ),
+  );
+}
+
+/**
+* Implements hook_menu().
+*/
+
+function hr_stats_menu(){
+  $items = array();
+
+  $items['group/%/%/admin/analytics'] = array(
+    'title' => 'Analytics',
+    'page callback' => 'hr_stats_reports',
+    'page arguments' => array(1, 2),
+    'access arguments' => array('access piwik reports'),
+    'file' => 'hr_stats.pages.inc',
+    'description' => 'Reports on the Operation\'s visitors, popular pages and so much more ...',
+  );
+  $items['group/%/%/admin/analytics/visitors'] = array(
+    'title' => 'Visitors',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('hr_stats_reports', 'visitors_overview'),
+    'access arguments' => array('access piwik reports'),
+    'file' => 'hr_stats.pages.inc',
+    'type' => MENU_NORMAL_ITEM,
+  );
+  $items['group/%/%/admin/analytics/visitors/overview'] = array(
+    'title' => 'Overview',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('hr_stats_reports', 'visitors_overview'),
+    'access arguments' => array('access piwik reports'),
+    'file' => 'hr_stats.pages.inc',
+    'weight' => 1,
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+  $items['group/%/%/admin/analytics/visitors/map'] = array(
+    'title' => 'Map',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('hr_stats_reports', 'visitors_overview_map'),
+    'access arguments' => array('access piwik reports'),
+    'file' => 'hr_stats.pages.inc',
+    'weight' => 2,
+    'type' => MENU_LOCAL_TASK,
+  );
+  $items['group/%/%/admin/analytics/visitors/settings'] = array(
+    'title' => 'Settings',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('hr_stats_reports', 'visitors_settings'),
+    'access arguments' => array('access piwik reports'),
+    'file' => 'hr_stats.pages.inc',
+    'weight' => 3,
+    'type' => MENU_LOCAL_TASK,
+  );
+
+  // admin configuration
+
+  $items['admin/config/system/hr-stats'] = array(
+    'title' => 'Piwik reports for HumanitarianResponse',
+		'description' => 'Administer Piwik reports for HumanitarianResponse configuration',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('hr_stats_admin_settings_form'),
+    'access arguments' => array('administer piwik reports'),
+    'type' => MENU_NORMAL_ITEM,
+  );
+
+  return $items;
+ }
+
+ /**
+ * Implements hook_og_ui_get_group_admin()
+ */
+ 
+function hr_stats_og_ui_get_group_admin($group_type, $gid) {
+  $items = array();
+  if (og_user_access($group_type, $gid, 'access piwik reports')) {
+    $items['hr_analytics'] = array(
+      'title' => t('Analytics'),
+      'description' => t('Manage Operation Analytics'),
+      'href' => 'admin/analytics/visitors',
+    );
+  }
+  return $items;
+}
+
+/**
+*  Implements hook_theme()
+*/
+
+function hr_stats_theme(){
+  return array(
+  	'piwik_reports' => array(
+  	   'template' => 'hr-stats',
+  	   'variables' => array(
+  	     'data_url' => NULL,
+  	     'period' => NULL,
+  	   ),
+  	),
+  );
+}
+
+/**
+*  Implements hook_variable_info()
+*/
+
+function hr_stats_variable_info($options){
+	$segments = hr_stats_get_piwik_segments(variable_get('hr_stats_piwik_token_auth', ''), variable_get('hr_stats_piwik_site_id', ''));
+	if($segments == ''){
+		drupal_set_message(t('Piwik configuration for HumanitarianResponse has not been set properly, please consult your site admin to set the proper Piwik segment.'), 'warning', false);
+		
+		return;
+	}
+	else{
+		$variable['hr_stats_piwik_segment'] = array(
+		  'title' => t('Segments', array(), $options),
+		  'type' => 'select',
+			'options' => $segments,
+		);
+		return $variable;
+	}
+}
+
+/**
+*  Return the form that handles hr_stats configuration page
+*/
+
+function hr_stats_admin_settings_form($form_state){
+  drupal_set_title(t('Piwik Reports'));
+  
+  $form['piwik_reports_server'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Piwik report server'),
+    '#weight' => 1,
+    '#collapsible' => TRUE,
+
+  );
+  $form['piwik_reports_server']['hr_stats_piwik_url_http'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Piwik HTTP URL'),
+    '#default_value' => variable_get('hr_stats_piwik_url_http', ''),
+    '#size' => 80,
+    '#maxlength' => 255,
+    //'required' = TRUE,
+    '#weight' => 1,
+    '#description' => t('The URL to your piwik base directory.'),
+  );	
+  $form['token_auth'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Token auth & ID'),
+    '#weight' => 2,
+    '#collapsible' => TRUE,
+    '#description' => t('This is needed in order to acces piwik reports. Please consult your Piwik server administrator if you have a difficulty in finding it.'),
+  );
+  $form['token_auth']['hr_stats_piwik_token_auth'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Piwik Auth Token'),
+    '#default_value' => variable_get('hr_stats_piwik_token_auth', ''),
+    '#size' => 80,
+    '#maxlength' => 255,
+    '#weight' => 1,
+    '#description' => t('Your piwik authentication code.'),
+  );
+  $form['token_auth']['hr_stats_piwik_site_id'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Piwik site ID'),
+    '#default_value' => variable_get('hr_stats_piwik_site_id', ''),
+    '#size' => 80,
+    '#maxlength' => 255,
+    //'required' = TRUE,
+    '#weight' => 1,
+    '#description' => t('Your piwik site ID.'),
+  );
+
+  return system_settings_form($form);
+}
+
+/**
+ * Return a list of segments active on selected site.
+ *
+ * @param $auth_token
+ *   Piwik server token auth.
+ * @param $site_id
+ *   Selected site id.
+ *
+ * @return $segments - array with keys corresponding to the values
+ */
+
+function hr_stats_get_piwik_segments($auth_token, $site_id){
+	$result = drupal_http_request(hr_stats_get_url() . 'index.php?module=API&method=SegmentEditor.getAll&idSite=' . (int)$site_id . '&format=JSON&token_auth=' . $auth_token);
+  if (empty($result->data)) {
+    $segments = array();
+  } else {
+    $segs = drupal_json_decode($result->data);
+		foreach($segs as $key => $seg){
+			$segments[] = urldecode($seg['definition']);
+		}
+  }
+	return array_combine($segments, $segments);
+}
+
+function hr_stats_get_url(){
+	$url = variable_get('hr_stats_piwik_url_http', '');
+	if($url == ''){
+		drupal_set_message(t('Piwik server url is missing or wrong. Please ask your administrator to check Piwik Reports configuration.'), 'warning', false);
+	}
+	return $url;
+}
+
+
+
+
