@@ -204,8 +204,14 @@ function hr_stats_admin_settings_form($form_state){
 function hr_stats_get_piwik_segments($auth_token, $site_id){
 	$result = drupal_http_request(hr_stats_get_url() . 'index.php?module=API&method=SegmentEditor.getAll&idSite=' . (int)$site_id . '&format=JSON&token_auth=' . $auth_token);
   if (empty($result->data)) {
-    $segments = array();
-  } else {
+		drupal_set_message(t('Please ask your administrator to check Piwik Reports configuration.'), 'warning', false);
+		//return dummy data
+    $segments = array(
+    	'one' => 'One',
+			'two' => 'Two',
+    );
+  } 
+	else {
     $segs = drupal_json_decode($result->data);
 		foreach($segs as $key => $seg){
 			$segments[] = urldecode($seg['definition']);
