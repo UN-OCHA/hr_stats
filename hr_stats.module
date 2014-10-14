@@ -206,17 +206,17 @@ function hr_stats_get_piwik_segments($auth_token, $site_id){
   if (empty($result->data)) {
 		drupal_set_message(t('Please ask your administrator to check Piwik Reports configuration.'), 'warning', false);
 		//return dummy data
-    $segments = array(
+    $segs = array(
     	'one' => 'One',
 			'two' => 'Two',
     );
   } 
 	else {
     $segs = drupal_json_decode($result->data);
-		foreach($segs as $key => $seg){
-			$segments[] = urldecode($seg['definition']);
-		}
-  }
+	}
+	foreach($segs as $key => $seg){
+		$segments[] = urldecode($seg['definition']);
+	}
 	return array_combine($segments, $segments);
 }
 
