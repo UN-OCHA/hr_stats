@@ -119,21 +119,20 @@ function hr_stats_theme(){
 */
 
 function hr_stats_variable_info($options){
-	$segments = hr_stats_get_piwik_segments(variable_get('hr_stats_piwik_token_auth', ''), variable_get('hr_stats_piwik_site_id', ''));
-	if($segments == ''){
-		drupal_set_message(t('Piwik configuration for HumanitarianResponse has not been set properly, please consult your site admin to set the proper Piwik segment.'), 'warning', false);
-		
-		return;
-	}
-	else{
-		$variable['hr_stats_piwik_segment'] = array(
-		  'title' => t('Segments', array(), $options),
-			'type' => 'options',
-		  'description' => t('The available Piwik segments which are used to track Operations and other group pages', array(), $options),
-			'options' => $segments,
-		);
-		return $variable;
-	}
+    $segments = hr_stats_get_piwik_segments();
+    if(!isset($segments)){
+      drupal_set_message(t('Piwik configuration for HumanitarianResponse has not been set properly, please consult your site admin to set the proper Piwik segment.'), 'warning', false);
+    }
+    else{
+      $variable['hr_stats_piwik_segment'] = array(
+        'title' => t('Segments', array(), $options),
+        'type' => 'options',
+        'description' => t('The available Piwik segments which are used to track Operations and other group pages', array(), $options),
+        'options' => $segments,
+      );
+      return $variable;
+    }
+	
 }
 
 /**
@@ -156,7 +155,6 @@ function hr_stats_admin_settings_form($form_state){
     '#default_value' => variable_get('hr_stats_piwik_url_http', ''),
     '#size' => 80,
     '#maxlength' => 255,
-    //'required' = TRUE,
     '#weight' => 1,
     '#description' => t('The URL to your piwik base directory.'),
   );	
@@ -182,7 +180,6 @@ function hr_stats_admin_settings_form($form_state){
     '#default_value' => variable_get('hr_stats_piwik_site_id', ''),
     '#size' => 80,
     '#maxlength' => 255,
-    //'required' = TRUE,
     '#weight' => 1,
     '#description' => t('Your piwik site ID.'),
   );
@@ -201,23 +198,30 @@ function hr_stats_admin_settings_form($form_state){
  * @return $segments - array with keys corresponding to the values
  */
 
-function hr_stats_get_piwik_segments($auth_token, $site_id){
-	$result = drupal_http_request(hr_stats_get_url() . 'index.php?module=API&method=SegmentEditor.getAll&idSite=' . (int)$site_id . '&format=JSON&token_auth=' . $auth_token);
+function hr_stats_get_piwik_segments(){
+  $token_auth = variable_get('hr_stats_piwik_token_auth', '');
+  $site_id = variable_get('hr_stats_piwik_site_id', '');
+  if($token_auth == '' || $site_id == ''){
+    drupal_set_message(t('Piwik configuration for the site Id or Authentication Token has not been set properly, please consult your site admin.'), 'warning', false);
+    
+    return;
+  }
+  else{
+    $result = drupal_http_request(hr_stats_get_url() . 'index.php?module=API&method=SegmentEditor.getAll&idSite=' . (int)$site_id . '&format=JSON&token_auth=' . $token_auth);
   if (empty($result->data)) {
-		drupal_set_message(t('Please ask your administrator to check Piwik Reports configuration.'), 'warning', false);
-		//return dummy data
-    $segs = array(
-    	'one' => 'One',
-			'two' => 'Two',
-    );
+    drupal_set_message(t('Please ask your administrator to check Piwik Reports configuration.'), 'warning', false);
+
+    return;
   } 
-	else {
+  else {
     $segs = drupal_json_decode($result->data);
-	}
-	foreach($segs as $key => $seg){
-		$segments[] = urldecode($seg['definition']);
-	}
-	return array_combine($segments, $segments);
+    foreach($segs as $key => $seg){
+      $segments[] = urldecode($seg['definition']);
+    }
+    return array_combine($segments, $segments);
+  }
+  }
+	
 }
 
 function hr_stats_get_url(){
