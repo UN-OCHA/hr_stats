@@ -127,6 +127,7 @@ function hr_stats_variable_info($options){
       $variable['hr_stats_piwik_segment'] = array(
         'title' => t('Segments', array(), $options),
         'type' => 'select',
+        'element' => array('#type' => 'select'),
         'description' => t('The available Piwik segments which are used to track Operations and other group pages', array(), $options),
         'options' => $segments,
       );
