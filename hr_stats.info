@@ -1,6 +1,8 @@
-name = HR Statistics
+name = Statistics
 description = Adds piwik reports to the HumanitarianResponse platform
 core = 7.x
-package = Statistics
+package = Humanitarianresponse
+dependencies[] = features
 dependencies [] = og_variables
+features[features_api][] = api:2
 
