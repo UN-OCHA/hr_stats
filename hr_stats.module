@@ -99,6 +99,23 @@ function hr_stats_og_ui_get_group_admin($group_type, $gid) {
 }
 
 /**
+ * Implement hook_og_permission().
+ */
+function hr_stats_og_permission() {
+  $items = array();
+
+  $items['access piwik reports'] = array(
+    'title' => t('Access Piwik reports'),
+    'description' => t('Access Piwik reports for this group.'),
+    'default role' => array(OG_ADMINISTRATOR_ROLE),
+    'restrict access' => TRUE,
+  );
+
+  return $items;
+}
+
+
+/**
 *  Implements hook_theme()
 */
 
