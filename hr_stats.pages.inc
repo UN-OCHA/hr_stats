@@ -59,14 +59,14 @@ function hr_stats_reports_submit($form, &$form_state) {
 
 function hr_stats_reports($form, &$form_state, $report){
 	
-  $piwik_url = variable_get('hr_stats_piwik_url_http', '');
+  $piwik_url = variable_get('piwik_url_https', '');
   if(!isset($piwik_url)){
     drupal_set_message('Please check your piwik http URL in the configuration settings', 'warning', false);
 
     return;
   }
   $form = hr_stats_dateselect_form();
-  $piwik_site_id = variable_get('hr_stats_piwik_site_id', '');
+  $piwik_site_id = variable_get('piwik_site_id', '');
   if(!isset($piwik_site_id)){
     drupal_set_message('Please check your piwik site Id in the configuration settings', 'warning', false);
 
