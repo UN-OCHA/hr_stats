@@ -17,7 +17,7 @@ function hr_stats_dateselect_form() {
   $form['#attributes'] = array('class' => array('search-form'));
   $form['basic'] = array(
     '#type' => 'fieldset',
-    '#title' => t('Select site and time period'),
+    '#title' => t('Select time period'),
   );
   $form['basic']['inline'] = array(
     '#prefix' => '<div class="container-inline">',
