@@ -29,6 +29,6 @@ function hr_stats_drush_command() {
   return $items;
 }
 
-function drush_hr_migrate_redirects($period, $date) {
+function drush_hr_stats_full_stats($period, $date) {
   hr_stats_get_full_stats($period, $date);
 }
