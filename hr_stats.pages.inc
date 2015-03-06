@@ -215,3 +215,37 @@ function _hr_stats_get_period_name($period) {
   return $p;
 }
 
+function hr_stats_admin_reports_form($form, &$form_state) {
+  $form['period'] = array(
+    '#type' => 'select',
+    '#title' => t('Period'),
+    '#options' => array(
+      'day' => t('Day'),
+      'week' => t('Week'),
+      'month' => t('Month'),
+      'year' => t('Year'),
+    ),
+  );
+
+  $form['date'] = array(
+    '#type' => 'date',
+    '#title' => t('Date'),
+  );
+
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Submit'),
+  );
+  return $form;
+}
+
+function hr_stats_admin_reports_form_submit($form, &$form_state) {
+  drupal_set_time_limit(0);
+  $filename = 'hr_stats.csv';
+  $date = $form_state['values']['date'];
+  drupal_add_http_header('Content-Type', 'text/csv;charset=utf-8');
+  drupal_add_http_header('Content-Disposition', 'attachment;filename="'.$filename.'"');
+  hr_stats_get_full_stats($form_state['values']['period'], $date['year'].'-'.sprintf("%02d",$date['month']).'-'.sprintf("%02d", $date['day']));
+  drupal_exit();
+}
+
