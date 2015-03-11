@@ -398,18 +398,18 @@ function hr_stats_get_full_stats($period, $date) {
       $nb_dl_assessments = 0;
       foreach ($hr_downloads['subtable'] as $hr_download) {
         $full_url = 'http://www.humanitarianresponse.info'.$hr_download['label'];
-        if (in_array($full_url, $urls)) {
+        if (!empty($urls) && in_array($full_url, $urls)) {
           $nb_dl += $hr_download['nb_visits'];
-          if (in_array($full_url, $infographics)) {
+          if (!empty($infographics) && in_array($full_url, $infographics)) {
             $nb_dl_infographics += $hr_download['nb_visits'];
           }
-          if (in_array($full_url, $documents)) {
+          if (!empty($documents) && in_array($full_url, $documents)) {
             $nb_dl_documents += $hr_download['nb_visits'];
           }
-          if (in_array($full_url, $datasets)) {
+          if (!empty($datasets) && in_array($full_url, $datasets)) {
             $nb_dl_datasets += $hr_download['nb_visits'];
           }
-          if (in_array($full_url, $assessments)) {
+          if (!empty($assessments) && in_array($full_url, $assessments)) {
             $nb_dl_assessments += $hr_download['nb_visits'];
           }
         }   
